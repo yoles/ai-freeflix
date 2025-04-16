@@ -36,3 +36,10 @@ dist-ssr
 .DS_Store
 ui*
 UI*
+
+# Added by Claude Task Master
+.idea
+.vscode
+# Task files
+tasks.json
+tasks/ 
