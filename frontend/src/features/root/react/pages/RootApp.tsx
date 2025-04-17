@@ -1,6 +1,5 @@
 import { Outlet } from 'react-router-dom'
-import Header from '@shared/components/Header'
-import Footer from '@shared/components/Footer'
+import Header from '@features/root/react/sections/header/Header'
 
 function RootApp() {
   return (
@@ -9,7 +8,6 @@ function RootApp() {
       <main className="flex-grow pt-20">
         <Outlet />
       </main>
-      <Footer />
     </div>
   )
 }
