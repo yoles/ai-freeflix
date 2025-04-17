@@ -1,8 +1,8 @@
 import { Outlet } from 'react-router-dom'
-import Header from './components/Header'
-import Footer from './components/Footer'
+import Header from '@shared/components/Header'
+import Footer from '@shared/components/Footer'
 
-function App() {
+function RootApp() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Header />
@@ -14,4 +14,4 @@ function App() {
   )
 }
 
-export default App
+export default RootApp
