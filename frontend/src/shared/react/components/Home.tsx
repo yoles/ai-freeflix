@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import HeroSection from './HeroSection';
 import CategoryFilter, { CategoryType } from './CategoryFilter';
 import CategorySection, { Movie } from './CategorySection';
@@ -234,6 +234,28 @@ export default function Home() {
     // Implement movie click functionality
   };
 
+  // Create expanded movie lists for category view (4 rows of 5 items)
+  const expandedMovieList = useMemo(() => {
+    const result: Record<string, Movie[]> = {};
+    
+    // For each category, generate a list of 20 movies (or duplicate existing ones)
+    Object.keys(moviesData).forEach(category => {
+      if (category === 'trending') return; // Skip trending as it's handled separately
+      
+      const baseMovies = moviesData[category];
+      // Create a list of 20 movies by repeating the existing ones if needed
+      result[category] = Array(20).fill(null).map((_, index) => {
+        const originalIndex = index % baseMovies.length;
+        return {
+          ...baseMovies[originalIndex],
+          id: `${baseMovies[originalIndex].id}-${Math.floor(index / baseMovies.length)}` // Create unique IDs
+        };
+      });
+    });
+    
+    return result;
+  }, []);
+
   // Filter categories based on active filter
   const shouldShowCategory = (category: string): boolean => {
     if (activeCategory === 'all') return true;
@@ -256,38 +278,50 @@ export default function Home() {
             onCategoryChange={handleCategoryChange}
           />
 
-          {/* Movie Categories Sections */}
-          {shouldShowCategory('horror') && (
-            <CategorySection
-              title="Horror"
-              movies={moviesData.horror}
-              onViewAll={() => handleViewAll('horror')}
-              onMovieClick={handleMovieClick}
-            />
-          )}
+          {activeCategory === 'all' ? (
+            // Show regular categories layout for 'all'
+            <>
+              {shouldShowCategory('horror') && (
+                <CategorySection
+                  title="Horror"
+                  movies={moviesData.horror}
+                  onViewAll={() => handleViewAll('horror')}
+                  onMovieClick={handleMovieClick}
+                />
+              )}
 
-          {shouldShowCategory('superhero') && (
-            <CategorySection
-              title="Superhero"
-              movies={moviesData.superhero}
-              onViewAll={() => handleViewAll('superhero')}
-              onMovieClick={handleMovieClick}
-            />
-          )}
+              {shouldShowCategory('superhero') && (
+                <CategorySection
+                  title="Superhero"
+                  movies={moviesData.superhero}
+                  onViewAll={() => handleViewAll('superhero')}
+                  onMovieClick={handleMovieClick}
+                />
+              )}
 
-          {/* Trending Now is always shown regardless of filter */}
-          <CategorySection
-            title="Trending Now"
-            movies={moviesData.trending}
-            onViewAll={() => handleViewAll('trending')}
-            onMovieClick={handleMovieClick}
-          />
+              {/* Trending Now is always shown in 'all' view */}
+              <CategorySection
+                title="Trending Now"
+                movies={moviesData.trending}
+                onViewAll={() => handleViewAll('trending')}
+                onMovieClick={handleMovieClick}
+              />
 
-          {shouldShowCategory('scifi') && (
+              {shouldShowCategory('scifi') && (
+                <CategorySection
+                  title="Sci-Fi"
+                  movies={moviesData.scifi}
+                  onViewAll={() => handleViewAll('scifi')}
+                  onMovieClick={handleMovieClick}
+                />
+              )}
+            </>
+          ) : (
+            // Show expanded view for specific category (4 rows of 5 items)
             <CategorySection
-              title="Sci-Fi"
-              movies={moviesData.scifi}
-              onViewAll={() => handleViewAll('scifi')}
+              title={activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1)}
+              movies={expandedMovieList[activeCategory] || []}
+              onViewAll={() => handleViewAll(activeCategory)}
               onMovieClick={handleMovieClick}
             />
           )}
