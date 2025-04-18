@@ -21,7 +21,7 @@ const Header: React.FC = () => {
       <div className="container flex h-16 items-center justify-between px-4 md:px-6">
         <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center">
-            <span className="text-xl font-bold tracking-tighter text-red-500">STREAMFLIX</span>
+            <span className="text-xl font-bold tracking-tighter text-red-500">FREEFLIX</span>
           </Link>
           
           {/* Desktop navigation */}
