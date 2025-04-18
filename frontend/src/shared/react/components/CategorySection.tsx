@@ -24,6 +24,16 @@ const CategorySection: React.FC<CategorySectionProps> = ({
   onViewAll,
   onMovieClick
 }) => {
+  // Check if this is an expanded category view (20 items)
+  const isExpandedView = movies.length === 20;
+
+  // For expanded view, organize movies into 4 rows of 5 items
+  const movieRows = isExpandedView ? 
+    Array(4).fill(null).map((_, rowIndex) => 
+      movies.slice(rowIndex * 5, (rowIndex + 1) * 5)
+    ) : 
+    [movies];
+
   return (
     <section className="mb-10">
       <div className="flex items-center justify-between mb-6">
@@ -50,15 +60,33 @@ const CategorySection: React.FC<CategorySectionProps> = ({
         </button>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {movies.map(movie => (
-          <MovieCard 
-            key={movie.id} 
-            movie={movie} 
-            onPlay={() => onMovieClick(movie.id)}
-          />
-        ))}
-      </div>
+      {isExpandedView ? (
+        // Expanded view layout (4 rows of 5 items)
+        <div className="space-y-4">
+          {movieRows.map((rowMovies, rowIndex) => (
+            <div key={rowIndex} className="grid grid-cols-5 gap-4">
+              {rowMovies.map(movie => (
+                <MovieCard 
+                  key={movie.id} 
+                  movie={movie} 
+                  onPlay={() => onMovieClick(movie.id)}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+      ) : (
+        // Regular responsive layout
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {movies.map(movie => (
+            <MovieCard 
+              key={movie.id} 
+              movie={movie} 
+              onPlay={() => onMovieClick(movie.id)}
+            />
+          ))}
+        </div>
+      )}
     </section>
   );
 };
