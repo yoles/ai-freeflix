@@ -18,7 +18,7 @@ const Header: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-50 border-b border-zinc-800 bg-black/95 backdrop-blur supports-[backdrop-filter]:bg-black/60">
-      <div className="container flex h-16 items-center justify-between px-4 md:px-6">
+      <div className="container flex h-16 items-center justify-between px-4 m-auto md:px-6">
         <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center">
             <span className="text-xl font-bold tracking-tighter text-red-500">FREEFLIX</span>
@@ -51,7 +51,7 @@ const Header: React.FC = () => {
           <div className="relative hidden md:block">
             <SearchBar 
               onSearch={handleSearch} 
-              className="w-[200px]" 
+              className="w-[250px]" 
             />
           </div>
           
