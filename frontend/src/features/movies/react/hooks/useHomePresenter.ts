@@ -1,10 +1,47 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { CategoryType } from '../sections/CategoryFilter';
-import { dummyMovie, MovieDomainModel, moviesData } from '../../core/entities/movies';
-
+import { MovieDomainModel } from '../../core/entities/movies';
+import { fetchMovies } from '../../core/usecases/fetchMovies.usecase';
+import { useAppDispatch, useAppSelector } from '@src/core/store/hooks';
 
 export function useHomePresenter()  {
+  const dispatch = useAppDispatch();
   const [activeCategory, setActiveCategory] = useState<CategoryType>('all');
+  
+  // Get movies from Redux store
+  const { movies, status } = useAppSelector(state => state.movies);
+  console.log('[DEBUG] movies', movies);
+  
+  // Initialize categories data structure
+  const [categorizedMovies, setCategorizedMovies] = useState<Record<string, MovieDomainModel.Movie[]>>({
+    trending: [],
+    horror: [],
+    superhero: [],
+    scifi: []
+  });
+  
+  // Get first movie as hero movie (previously dummyMovie)
+  const heroMovie = movies.length > 0 ? movies[0] : null;
+
+  // Fetch movies on component mount
+  useEffect(() => {
+    dispatch(fetchMovies());
+  }, [dispatch]);
+
+  // Categorize movies whenever movies array changes
+  useEffect(() => {
+    if (movies.length === 0) return;
+    
+    // Simple categorization logic (in real app, this would use actual categories from API)
+    const result = {
+      trending: movies.slice(0, 6),
+      horror: movies.slice(6, 12),
+      superhero: movies.slice(12, 18),
+      scifi: movies.slice(18, 24)
+    };
+    
+    setCategorizedMovies(result);
+  }, [movies]);
 
   const handleWatchMovie = (movieId: number) => {
     console.log('Watch movie:', movieId);
@@ -35,22 +72,23 @@ export function useHomePresenter()  {
     const result: Record<string, MovieDomainModel.Movie[]> = {};
     
     // For each category, generate a list of 20 movies (or duplicate existing ones)
-    Object.keys(moviesData).forEach(category => {
+    Object.keys(categorizedMovies).forEach(category => {
       if (category === 'trending') return; // Skip trending as it's handled separately
       
-      const baseMovies = moviesData[category];
+      const baseMovies = categorizedMovies[category];
       // Create a list of 20 movies by repeating the existing ones if needed
       result[category] = Array(20).fill(null).map((_, index) => {
+        if (baseMovies.length === 0) return null;
         const originalIndex = index % baseMovies.length;
         return {
           ...baseMovies[originalIndex],
-          id: baseMovies[originalIndex].id + Math.floor(index / baseMovies.length) // Create unique IDs
+          id: baseMovies[originalIndex].id + Math.floor(index / baseMovies.length) * 1000 // Create unique IDs
         };
-      });
+      }).filter(Boolean) as MovieDomainModel.Movie[];
     });
     
     return result;
-  }, []);
+  }, [categorizedMovies]);
 
   // Filter categories based on active filter
   const shouldShowCategory = (category: string): boolean => {
@@ -59,15 +97,16 @@ export function useHomePresenter()  {
   };
 
   return {
-    dummyMovie,
+    dummyMovie: heroMovie, // Keep the same prop name for backwards compatibility
     activeCategory,
-    moviesData,
+    moviesData: categorizedMovies, // Keep the same prop name for backwards compatibility
     expandedMovieList,
     shouldShowCategory,
     handleCategoryChange,
     handleWatchMovie,
     handlePlayTrailer,
     handleViewAllCategory,
-    handleSelectMovie
+    handleSelectMovie,
+    isLoading: status === 'pending'
   };
 }

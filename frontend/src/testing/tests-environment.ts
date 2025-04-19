@@ -1,9 +1,11 @@
 import { createStore, RootState } from "@src/core/store";
 import { Dependencies } from "@src/app/dependencies";
+import { HttpSuccessStubAdapter } from "@src/core/adapters";
 
 const createDependencies = (
   dependencies?: Partial<Dependencies>
 ): Dependencies => ({
+  httpClient: new HttpSuccessStubAdapter({ success: true, data: {} }),
   ...dependencies,
 });
 

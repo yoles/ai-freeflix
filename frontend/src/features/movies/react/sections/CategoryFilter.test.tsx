@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import CategoryFilter from '../CategoryFilter';
+import CategoryFilter from './CategoryFilter';
 
 describe('CategoryFilter', () => {
   it('renders all category buttons', () => {

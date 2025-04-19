@@ -14,8 +14,27 @@ export default function Home() {
     handlePlayTrailer, 
     handleCategoryChange, 
     handleViewAllCategory, 
-    handleSelectMovie 
+    handleSelectMovie,
+    isLoading
   } = useHomePresenter();
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-xl font-semibold">Loading movies...</div>
+      </div>
+    );
+  }
+
+  // Handle case where no movies are available
+  if (!dummyMovie) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-xl font-semibold">No movies available</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col">
