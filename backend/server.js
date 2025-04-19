@@ -1,5 +1,4 @@
 import bodyParser from 'body-parser';
-import puppeteer from "puppeteer";
 import dotenv from 'dotenv';
 import express from "express";
 import cors from "cors";
@@ -7,6 +6,8 @@ import WebTorrent from "webtorrent";
 import {fileURLToPath} from "url";
 import path from "path";
 import fs from "fs";
+import * as cheerio from 'cheerio';
+import fetch from 'node-fetch';
 
 
 dotenv.config();
@@ -45,27 +46,45 @@ async function get_magnet_link_tpb(page) {
 }
 
 
-async function get_torrents_link_1337x(page) {
-    return await page.evaluate(() => {
-        let torrentsLink = [];
-        let links = document.querySelectorAll('a');
-        for (let link of links) {
-            if (link.href.includes('/torrent/') && !link.href.toLowerCase().includes('porno')) {
-                const splitLink = link.href.split('/').filter(i => !!i);
-                torrentsLink.push({link: link.href, name: splitLink[splitLink.length - 1]});
-            }
+async function get_torrents_link_1337x(url) {
+    const response = await fetch(url);
+    const html = await response.text();
+    const $ = cheerio.load(html);
+    
+    let torrentsLink = [];
+    $('a').each((_, element) => {
+        const link = $(element).attr('href');
+        if (link && link.includes('/torrent/') && !link.toLowerCase().includes('porno')) {
+            const splitLink = link.split('/').filter(i => !!i);
+            const fullLink = link.startsWith('http') ? link : `https://1337x.to${link}`;
+            torrentsLink.push({
+                link: fullLink, 
+                name: splitLink[splitLink.length - 1]
+            });
         }
-        return torrentsLink;
     });
+    
+    return torrentsLink;
 }
 
-async function get_magnet_link_1337x_from(link) {
-    const content = await page.goto(link);
-    console.log()
+async function get_magnet_link_1337x_from(url) {
+    const response = await fetch(url);
+    const html = await response.text();
+    const $ = cheerio.load(html);
+    
+    const magnetLinks = [];
+    $('a').each((_, element) => {
+        const link = $(element).attr('href');
+        if (link && link.includes('magnet:') && !link.toLowerCase().includes('porno')) {
+            magnetLinks.push(link);
+        }
+    });
+    
+    return magnetLinks.length > 0 ? magnetLinks[0] : null;
 }
 
-app.get('/', async (req, res) => {
-    const url = "https://api.themoviedb.org/3/movie/popular";
+app.get('/movie/now_playing', async (req, res) => {
+    const url = "https://api.themoviedb.org/3/movie/now_playing";
     const movieDetailUrl = "https://api.themoviedb.org/3/movie";
     const posterUrl = "https://image.tmdb.org/t/p/w500/";
 
@@ -82,21 +101,22 @@ app.get('/', async (req, res) => {
     const rawMovies = data.results.slice(0, 5);
     const movies = [];
 
-    response = await fetch(`${movieDetailUrl}/${rawMovies[0].id}`, options)
-    const firstMovie = await response.json();
-    for (const movie of rawMovies) {
+    const fetchDetailsPromises = rawMovies.map(movie => 
+        fetch(`${movieDetailUrl}/${movie.id}`, options)
+            .then(response => response.json())
+    );
+    const moviesDetails = await Promise.all(fetchDetailsPromises);
+    for (const movie of moviesDetails) {
         movies.push({
             id: movie.id,
             title: movie.title,
-            poster_path: posterUrl + movie.poster_path,
+            imageURL: posterUrl + movie.poster_path,
+            genres: movie.genres.map(g => g.name),
+            overview: movie.overview,
+            duration: formatRuntime(movie.runtime),
         });
     }
-    movies[0] = {
-        ...movies[0],
-        genres: firstMovie.genres.map(g => g.name),
-        overview: firstMovie.overview,
-        duration: formatRuntime(firstMovie.runtime)
-    };
+
     res.send(movies);
 })
 
@@ -124,15 +144,9 @@ app.get('/movie/detail/:movieId', async (req, res) => {
         poster_path: posterUrl + rawMovie.poster_path,
     };
 
-    const Url1337x = `https://1337x.to/search/${rawMovie.title}/1/`
+    const Url1337x = `https://1337x.to/search/${rawMovie.title}/1/`;
+    const torrentsLink = await get_torrents_link_1337x(Url1337x);
 
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    await page.goto(Url1337x);
-
-    const torrentsLink = await get_torrents_link_1337x(page);
-
-    await browser.close();
     res.send({
         links: torrentsLink,
         movie: movie,
@@ -175,24 +189,7 @@ app.get("/metadata/:magnet", async (req, res) => {
 
 app.post('/get/magnet', async (req, res) => {
     const link = req.body.link;
-
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    await page.goto(link);
-
-    const magnets = await page.evaluate(() => {
-        let magnetLink = [];
-        let links = document.querySelectorAll('a');
-        for (let link of links) {
-            if (link.href.includes('magnet:') && !link.href.toLowerCase().includes('porno')) {
-                magnetLink.push(link.href);
-            }
-        }
-        return magnetLink;
-    });
-
-    await browser.close();
-    const magnet = (magnets && magnets.length > 0) ? magnets[0] : "";
+    const magnet = await get_magnet_link_1337x_from(link);
     res.send({magnet});
 })
 
