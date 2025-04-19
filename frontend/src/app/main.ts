@@ -1,6 +1,7 @@
 import {Dependencies} from "@src/app/dependencies.ts";
 import { AppStore } from "@src/core/store";
 import { createStore } from "@src/core/store";
+import { HttpAdapter } from "@src/core/adapters";
 
 export class App {
   public dependencies: Dependencies;
@@ -12,7 +13,9 @@ export class App {
   }
 
   setupDependencies(): Dependencies {
-    return {};
+    return {
+      httpClient: new HttpAdapter()
+    };
   }
 }
 
