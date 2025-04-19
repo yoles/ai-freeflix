@@ -1,15 +1,18 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import CategorySection, { Movie } from '../CategorySection';
 
 // Mocking the MovieCard component to simplify testing
-jest.mock('../MovieCard', () => {
-  return function MockMovieCard({ movie, onPlay }: { movie: Movie; onPlay: () => void }) {
-    return (
-      <div data-testid={`movie-card-${movie.id}`} onClick={onPlay}>
-        {movie.title}
-      </div>
-    );
+vi.mock('../MovieCard', () => {
+  return {
+    default: function MockMovieCard({ movie, onPlay }: { movie: Movie; onPlay: () => void }) {
+      return (
+        <div data-testid={`movie-card-${movie.id}`} onClick={onPlay}>
+          {movie.title}
+        </div>
+      );
+    }
   };
 });
 
@@ -35,8 +38,8 @@ describe('CategorySection', () => {
     }
   ];
 
-  const mockOnViewAll = jest.fn();
-  const mockOnMovieClick = jest.fn();
+  const mockOnViewAll = vi.fn();
+  const mockOnMovieClick = vi.fn();
 
   beforeEach(() => {
     mockOnViewAll.mockClear();

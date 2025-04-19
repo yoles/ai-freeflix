@@ -1,19 +1,13 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import CategoryFilter, { CategoryType } from '../CategoryFilter';
+import { vi, describe, it, expect } from 'vitest';
+import CategoryFilter from '../CategoryFilter';
 
 describe('CategoryFilter', () => {
-  const mockOnCategoryChange = jest.fn();
-  
-  beforeEach(() => {
-    mockOnCategoryChange.mockClear();
-  });
-
   it('renders all category buttons', () => {
     render(
       <CategoryFilter 
         activeCategory="all" 
-        onCategoryChange={mockOnCategoryChange} 
+        onCategoryChange={() => {}} 
       />
     );
     
@@ -27,14 +21,13 @@ describe('CategoryFilter', () => {
     render(
       <CategoryFilter 
         activeCategory="horror" 
-        onCategoryChange={mockOnCategoryChange} 
+        onCategoryChange={() => {}} 
       />
     );
     
     const horrorButton = screen.getByText('Horror');
     const allButton = screen.getByText('All');
     
-    // Check that the active button has the right styling classes
     expect(horrorButton.className).toContain('bg-zinc-800');
     expect(horrorButton.className).toContain('text-white');
     expect(allButton.className).not.toContain('bg-zinc-800');
@@ -42,6 +35,7 @@ describe('CategoryFilter', () => {
   });
 
   it('calls onCategoryChange when a category is clicked', () => {
+    const mockOnCategoryChange = vi.fn();
     render(
       <CategoryFilter 
         activeCategory="all" 
@@ -58,6 +52,7 @@ describe('CategoryFilter', () => {
   });
 
   it('sets aria-current for the active category', () => {
+    const mockOnCategoryChange = vi.fn();
     render(
       <CategoryFilter 
         activeCategory="scifi" 
