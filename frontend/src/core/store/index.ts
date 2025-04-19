@@ -1,7 +1,9 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import { Dependencies } from '@src/app/dependencies';
+import { moviesReducer } from '@src/features/movies/core/store';
 
 const reducers = combineReducers({
+  movies: moviesReducer
 });
 
 
